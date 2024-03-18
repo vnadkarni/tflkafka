@@ -23,7 +23,11 @@
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"redhat.fabric8-analytics"
+				"redhat.fabric8-analytics",
+				"vscjava.vscode-java-pack",
+				"vmware.vscode-boot-dev-pack",
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
 			]
 		}
 	}
