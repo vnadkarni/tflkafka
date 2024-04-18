@@ -31,4 +31,163 @@ public class VehicleArrival {
         private String sent;
         private String received;        
     }
+    public String get$type() {
+        return $type;
+    }
+
+    public void set$type(String $type) {
+        this.$type = $type;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getOperationType() {
+        return operationType;
+    }
+
+    public void setOperationType(String operationType) {
+        this.operationType = operationType;
+    }
+
+    public String getVehicleid() {
+        return vehicleid;
+    }
+
+    public void setVehicleid(String vehicleid) {
+        this.vehicleid = vehicleid;
+    }
+
+    public String getNaptanId() {
+        return naptanId;
+    }
+
+    public void setNaptanId(String naptanId) {
+        this.naptanId = naptanId;
+    }
+
+    public String getStationName() {
+        return stationName;
+    }
+
+    public void setStationName(String stationName) {
+        this.stationName = stationName;
+    }
+
+    public String getLineId() {
+        return lineId;
+    }
+
+    public void setLineId(String lineId) {
+        this.lineId = lineId;
+    }
+
+    public String getLineName() {
+        return lineName;
+    }
+
+    public void setLineName(String lineName) {
+        this.lineName = lineName;
+    }
+
+    public String getPlatformName() {
+        return platformName;
+    }
+
+    public void setPlatformName(String platformName) {
+        this.platformName = platformName;
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public void setDirection(String direction) {
+        this.direction = direction;
+    }
+
+    public String getBearing() {
+        return bearing;
+    }
+
+    public void setBearing(String bearing) {
+        this.bearing = bearing;
+    }
+
+    public String getDestinationNaptanId() {
+        return destinationNaptanId;
+    }
+
+    public void setDestinationNaptanId(String destinationNaptanId) {
+        this.destinationNaptanId = destinationNaptanId;
+    }
+
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    public void setDestinationName(String destinationName) {
+        this.destinationName = destinationName;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(String timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getTimeToStation() {
+        return timeToStation;
+    }
+
+    public void setTimeToStation(String timeToStation) {
+        this.timeToStation = timeToStation;
+    }
+
+    public String getCurrentLocation() {
+        return currentLocation;
+    }
+
+    public void setCurrentLocation(String currentLocation) {
+        this.currentLocation = currentLocation;
+    }
+
+    public String getTowards() {
+        return towards;
+    }
+
+    public void setTowards(String towards) {
+        this.towards = towards;
+    }
+
+    public String getExpectedArrival() {
+        return expectedArrival;
+    }
+
+    public void setExpectedArrival(String expectedArrival) {
+        this.expectedArrival = expectedArrival;
+    }
+
+    public String getTimeToLive() {
+        return timeToLive;
+    }
+
+    public void setTimeToLive(String timeToLive) {
+        this.timeToLive = timeToLive;
+    }
+
+    public String getModeName() {
+        return modeName;
+    }
+
+    public void setModeName(String modeName) {
+        this.modeName = modeName;
+    }
 }
