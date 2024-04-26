@@ -1,10 +1,10 @@
 package com.vnadkarni.tfl.tflkafka;
 
 public class VehicleArrival {
-    public String $type;
-    public String id;
-    private String operationType;
-    private String vehicleid;
+    private String $type;
+    private String id;
+    private int operationType;
+    private String vehicleId;
     private String naptanId;
     private String stationName;
     private String lineId;
@@ -47,20 +47,20 @@ public class VehicleArrival {
         this.id = id;
     }
 
-    public String getOperationType() {
+    public int getOperationType() {
         return operationType;
     }
 
-    public void setOperationType(String operationType) {
+    public void setOperationType(int operationType) {
         this.operationType = operationType;
     }
 
-    public String getVehicleid() {
-        return vehicleid;
+    public String getVehicleId() {
+        return vehicleId;
     }
 
-    public void setVehicleid(String vehicleid) {
-        this.vehicleid = vehicleid;
+    public void setVehicleId(String vehicleId) {
+        this.vehicleId = vehicleId;
     }
 
     public String getNaptanId() {
