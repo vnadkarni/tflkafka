@@ -51,4 +51,9 @@ public class VehicleEvent {
     public void setTimestamp(String timestamp) {
         this.timestamp = timestamp;
     }
+
+    @Override
+    public String toString() {
+        return "Vehicle " + vehicleId + "'s " + eventType + " at " + eventLocation + " at " + timestamp;
+    }
 }

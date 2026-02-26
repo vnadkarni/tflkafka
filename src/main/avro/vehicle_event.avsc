@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "VehicleEventAvro",
+  "namespace": "com.vnadkarni.tfl.tflkafka.avro",
+  "fields": [
+    { "name": "vehicleId", "type": "string" },
+    { "name": "eventType", "type": "string" },
+    { "name": "eventLocation", "type": "string" },
+    { "name": "timestamp", "type": "string" }
+  ]
+}
