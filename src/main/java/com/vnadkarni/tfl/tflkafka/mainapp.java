@@ -11,6 +11,9 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 import com.vnadkarni.tfl.tflkafka.avro.VehicleEventAvro;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.Thread;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -21,6 +24,7 @@ import org.springframework.core.io.ClassPathResource;
 
 @Component
 public class mainapp implements CommandLineRunner {
+    private static final Logger logger = LoggerFactory.getLogger(mainapp.class);
 
     public static Properties readConfig(final String configFile) throws IOException {
         // reads the client configuration from application.properties
@@ -40,10 +44,10 @@ public class mainapp implements CommandLineRunner {
      * sends a single message to the specified topic, logs the operation, and closes
      * the producer connection.
      * 
-     * @param topic the name of the Kafka topic to produce the message to
+     * @param topic  the name of the Kafka topic to produce the message to
      * @param config the producer configuration properties
-     * @param key the message key as a string
-     * @param value the message value as a string
+     * @param key    the message key as a string
+     * @param value  the message value as a string
      */
     public static void produce(String topic, Properties config, String key, String value) {
         // sets the message serializers
@@ -53,43 +57,38 @@ public class mainapp implements CommandLineRunner {
         // creates a new producer instance and sends a sample message to the topic
         Producer<String, String> producer = new KafkaProducer<>(config);
         producer.send(new ProducerRecord<>(topic, key, value));
-        System.out.println(
-                String.format(
-                        "Produced message to topic %s: key = %s value = %s", topic, key, value));
+        logger.info("Produced message to topic {}: key = {} value = {}", topic, key, value);
 
         // closes the producer connection
         producer.close();
     }
 
-        public static void produce(String topic, Properties config, VehicleEventAvro event) {
+    public static void produce(String topic, Properties config, VehicleEventAvro event) {
         // sets the message serializers
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
         // Ensure Schema Registry properties are available to the serializer
         if (!config.containsKey("schema.registry.url")) {
-            System.err.println("ERROR: schema.registry.url not found in configuration");
-            System.err.println("Available properties: " + config.keySet());
+            logger.error("ERROR: schema.registry.url not found in configuration");
+            logger.error("Available properties: {}", config.keySet());
             return;
         }
 
         // Debug: Log the schema registry URL to verify configuration
-        System.out.println("Attempting to connect to Schema Registry: " + config.getProperty("schema.registry.url"));
+        logger.debug("Attempting to connect to Schema Registry: {}", config.getProperty("schema.registry.url"));
 
         // creates a new producer instance and sends a sample message to the topic
         Producer<String, VehicleEventAvro> producer = new KafkaProducer<>(config);
         try {
-            System.out.println("Producing Avro message: key=" + event.getVehicleId() + ", type=" + event.getEventType());
+            logger.debug("Producing Avro message: key={}, type={}", event.getVehicleId(), event.getEventType());
             // Send the message and wait for acknowledgment
             RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, event.getVehicleId(), event)).get();
-            System.out.println(
-                    String.format(
-                    "✓ Produced Avro message to topic %s: key = %s value = %s at offset %d", 
-                    topic, event.getVehicleId(), event, metadata.offset()));
+            logger.info("✓ Produced Avro message to topic {}: key = {} value = {} at offset {}", 
+                    topic, event.getVehicleId(), event, metadata.offset());
         } catch (Exception e) {
-            System.err.println("✗ Failed to send Avro message: " + e.getMessage());
-            System.err.println("This could indicate: Schema Registry unreachable, invalid credentials, or serialization failure");
-            e.printStackTrace();
+            logger.error("✗ Failed to send Avro message: {}", e.getMessage());
+            logger.error("This could indicate: Schema Registry unreachable, invalid credentials, or serialization failure", e);
         } finally {
             // Flush and close the producer connection
             producer.flush();
@@ -97,10 +96,9 @@ public class mainapp implements CommandLineRunner {
         }
     }
 
-
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("Hello World");
+        logger.info("Starting TFL Kafka Application");
         main(args);
     }
 
@@ -122,30 +120,36 @@ public class mainapp implements CommandLineRunner {
         try (InputStream inputStream = new ClassPathResource("application.properties").getInputStream()) {
             config.load(inputStream);
         } catch (IOException e) {
-            System.err.println("Failed to load application.properties");
-            e.printStackTrace();
+            logger.error("Failed to load application.properties", e);
         }
 
         while (true) {
 
-            VehicleArrival[] response = builder.build()
-                    .get()
-                    .uri("https://api.tfl.gov.uk/Line/piccadilly/Arrivals")
-                    .retrieve()
-                    .bodyToMono(VehicleArrival[].class)
-                    .block();
+            VehicleArrival[] response = null;
+            try {
+                response = builder.build()
+                        .get()
+                        .uri("https://api.tfl.gov.uk/Line/piccadilly/Arrivals")
+                        .retrieve()
+                        .bodyToMono(VehicleArrival[].class)
+                        .block();
+            } catch (Exception e) {
+                logger.error("Failed to fetch vehicle arrivals: {}", e.getMessage(), e);
+                continue;
+            }
+            
+            if (response == null) {
+                continue;
+            }
             for (VehicleArrival vehicleArrival : response) {
-
-                // System.out.println(vehicleArrival.getVehicleId() + " " +
-                // vehicleArrival.getCurrentLocation());
 
                 String oldLocation = vehicleLocationMap.get(vehicleArrival.getVehicleId());
                 if (oldLocation == null) {
                     vehicleLocationMap.put(vehicleArrival.getVehicleId(), vehicleArrival.getCurrentLocation());
                 } else {
                     if (!oldLocation.equals(vehicleArrival.getCurrentLocation())) {
-                        vehicleLocationMap.put(vehicleArrival.getVehicleId(), vehicleArrival.getCurrentLocation());
-                        // System.out.println(vehicleArrival.getVehicleId() + " " +
+                        logger.debug("Vehicle {} has changed location from {} to {}", vehicleArrival.getVehicleId(), oldLocation, vehicleArrival.getCurrentLocation());
+                        // vehicleLocationMap.put(vehicleArrival.getVehicleId(),
                         // vehicleArrival.getCurrentLocation());
                         Scanner scanner = new Scanner(vehicleArrival.getCurrentLocation());
                         scanner.useDelimiter(" ");
@@ -154,44 +158,49 @@ public class mainapp implements CommandLineRunner {
                             if (preposition.equals("At")) {
                                 String location = StringUtils.substringAfter(vehicleArrival.getCurrentLocation(),
                                         "At ");
-                                if (!location.equals("Platform")) {
-                                    System.out.println(
-                                            "Vehicle " + vehicleArrival.getVehicleId() + " has arrived at " + location);
+                                if (!location.equals("Platform") && !oldLocation.equals(vehicleArrival.getCurrentLocation())) {
+                                    vehicleLocationMap.put(vehicleArrival.getVehicleId(),
+                                        vehicleArrival.getCurrentLocation());
+
+                                    // Log vehicle arrival
+                                    logger.info("Vehicle {} has arrived at {}", vehicleArrival.getVehicleId(), location);
                                     try {
                                         event = new VehicleEventAvro(vehicleArrival.getVehicleId(), "Arrival", location,
                                                 LocalDateTime.now().toString());
                                         produce(topic, config, event);
                                     } catch (Exception exc) {
-                                        exc.printStackTrace();
+                                        logger.error("Error processing arrival event for vehicle {}", vehicleArrival.getVehicleId(), exc);
                                     }
 
                                 }
-                            } else {
-                                String location = StringUtils.substringAfter(oldLocation, " ");
-                                if (!location.equals("Platform")) {
-                                    System.out
-                                            .println("Vehicle " + vehicleArrival.getVehicleId() + " has departed "
-                                                    + location);
-                                    try {
-                                        event = new VehicleEventAvro(vehicleArrival.getVehicleId(), "Departure", location,
-                                                LocalDateTime.now().toString());
+                            } 
+                            // else {
+                                // String location = StringUtils.substringAfter(oldLocation, " ");
+                                // if (!location.equals("Platform")) {
+                                // // System.out
+                                // // .println("Vehicle " + vehicleArrival.getVehicleId() + " has departed "
+                                // // + location);
+                                // try {
+                                // event = new VehicleEventAvro(vehicleArrival.getVehicleId(), "Departure",
+                                // location,
+                                // LocalDateTime.now().toString());
 
-                                        produce(topic, config, event);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
+                                // produce(topic, config, event);
+                                // } catch (Exception e) {
+                                // e.printStackTrace();
+                                // }
 
-                                }
-                            }
+                                // }
+                            // }
                         }
                         scanner.close();
                     }
                 }
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(1500);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.warn("Thread sleep interrupted", e);
             }
         }
     }
